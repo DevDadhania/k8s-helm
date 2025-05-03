@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-ecard-tempo
+  labels:
+    app: {{ .Release.Name }}-ecard-tempo
+spec:
+  ports:
+    - name: tempo
+      port: 3110
+      targetPort: 3100
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+  selector:
+    app: {{ .Release.Name }}-ecard-tempo

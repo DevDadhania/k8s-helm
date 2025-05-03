@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-rocketchat
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-rocketchat
+spec:
+  replicas: {{ .Values.ecardRocketchat.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-rocketchat
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-rocketchat
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      containers:
+        - name: ecard-rocketchat
+          image: "{{ .Values.ecardRocketchat.image }}"
+          ports:
+            - containerPort: {{ .Values.ecardRocketchat.port }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Starting Rocket.Chat with full env setup";
+              export MONGO_URL="{{ tpl (replace "PLACEHOLDER" (printf "%s-ecard-mongodb.default.svc.cluster.local" (include "ekt-ecard.fullname" .)) .Values.ecardRocketchat.env.MONGO_URL) . }}";
+              export MONGO_OPLOG_URL="{{ tpl (replace "PLACEHOLDER" (printf "%s-ecard-mongodb.default.svc.cluster.local" (include "ekt-ecard.fullname" .)) .Values.ecardRocketchat.env.MONGO_OPLOG_URL) . }}";
+              export ROOT_URL="{{ .Values.ecardRocketchat.env.ROOT_URL }}";
+              export PORT={{ .Values.ecardRocketchat.env.PORT }};
+              export ADMIN_EMAIL="{{ .Values.ecardRocketchat.env.ADMIN_EMAIL }}";
+              export ADMIN_USERNAME="{{ .Values.ecardRocketchat.env.ADMIN_USERNAME }}";
+              export ADMIN_PASS="{{ .Values.ecardRocketchat.env.ADMIN_PASS }}";
+              export DEPLOY_METHOD="{{ .Values.ecardRocketchat.env.DEPLOY_METHOD }}";
+              export OVERWRITE_SETTING_Accounts_AllowUserRegistration="{{ .Values.ecardRocketchat.env.OVERWRITE_SETTING_Accounts_AllowUserRegistration }}";
+              export OVERWRITE_SETTING_Accounts_RegistrationForm="{{ .Values.ecardRocketchat.env.OVERWRITE_SETTING_Accounts_RegistrationForm }}";
+              export OVERWRITE_SETTING_Accounts_RequirePasswordConfirmation="{{ .Values.ecardRocketchat.env.OVERWRITE_SETTING_Accounts_RequirePasswordConfirmation }}";
+              export OVERWRITE_SETTING_Accounts_TwoFactorAuthentication_Enabled="{{ .Values.ecardRocketchat.env.OVERWRITE_SETTING_Accounts_TwoFactorAuthentication_Enabled }}";
+              export OVERWRITE_SETTING_Show_Setup_Wizard="{{ .Values.ecardRocketchat.env.OVERWRITE_SETTING_Show_Setup_Wizard }}";
+              export WSCONFIG="{{ .Values.ecardRocketchat.env.WSCONFIG }}";
+              export WebSocket_Ping_Interval="{{ .Values.ecardRocketchat.env.WebSocket_Ping_Interval }}";
+              export WebSocket_Ping_Timeout="{{ .Values.ecardRocketchat.env.WebSocket_Ping_Timeout }}";
+              node main.js
+      restartPolicy: Always

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-mongodb
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-mongodb
+spec:
+  replicas: {{ .Values.ecardMongodb.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-mongodb
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      initContainers:
+        - name: init-mongo-replica
+          image: mongo
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MongoDB to be ready...";
+              until mongosh --host {{ include "ekt-ecard.fullname" . }}-ecard-mongodb.default.svc.cluster.local:27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                sleep 2
+              done
+              echo "MongoDB is up, attempting rs.initiate...";
+              mongosh --host {{ include "ekt-ecard.fullname" . }}-ecard-mongodb.default.svc.cluster.local:27017 --eval 'rs.initiate({_id: "rs0", members: [{_id: 0, host: "{{ include "ekt-ecard.fullname" . }}-ecard-mongodb.default.svc.cluster.local:27017"}]})' || echo "Replica set already initialized"
+      containers:
+        - name: ecard-mongodb
+          image: "{{ .Values.ecardMongodb.image }}"
+          ports:
+            - containerPort: {{ .Values.ecardMongodb.containerPort }}
+          env:
+            - name: MONGODB_REPLICA_SET_MODE
+              value: "{{ .Values.ecardMongodb.env.MONGODB_REPLICA_SET_MODE }}"
+            - name: MONGODB_REPLICA_SET_NAME
+              value: "{{ .Values.ecardMongodb.env.MONGODB_REPLICA_SET_NAME }}"
+            - name: MONGODB_PORT_NUMBER
+              value: "{{ .Values.ecardMongodb.env.MONGODB_PORT_NUMBER }}"
+            - name: MONGODB_INITIAL_PRIMARY_HOST
+              value: "{{ .Values.ecardMongodb.env.MONGODB_INITIAL_PRIMARY_HOST }}"
+            - name: MONGODB_INITIAL_PRIMARY_PORT_NUMBER
+              value: "{{ .Values.ecardMongodb.env.MONGODB_INITIAL_PRIMARY_PORT_NUMBER }}"
+            - name: MONGODB_ADVERTISED_HOSTNAME
+              value: "{{ .Values.ecardMongodb.env.MONGODB_ADVERTISED_HOSTNAME }}"
+            - name: MONGODB_ENABLE_JOURNAL
+              value: "{{ .Values.ecardMongodb.env.MONGODB_ENABLE_JOURNAL }}"
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "{{ .Values.ecardMongodb.env.ALLOW_EMPTY_PASSWORD }}"
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /bitnami/mongodb
+      volumes:
+        - name: mongodb-data
+          persistentVolumeClaim:
+            claimName: {{ include "ekt-ecard.fullname" . }}-ecard-mongodb-pvc
+      restartPolicy: Always

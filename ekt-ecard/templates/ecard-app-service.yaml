@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-app
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-app
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: {{ .Values.ecardApp.port }}
+    targetPort: {{ .Values.ecardApp.containerPort }}
+    nodePort: {{ .Values.ecardApp.nodePort }}
+  selector:
+    app: {{ include "ekt-ecard.name" . }}-ecard-app

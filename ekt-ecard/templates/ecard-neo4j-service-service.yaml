@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-neo4j-service
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-neo4j-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.ecardNeo4jService.port }}
+      targetPort: {{ .Values.ecardNeo4jService.port }}
+  selector:
+    app: {{ include "ekt-ecard.name" . }}-ecard-neo4j-service

@@ -1,0 +1,173 @@
+ecardApp:
+  replicaCount: 1
+  image: vasudkr081/app
+  containerPort: 8080         # used in Deployment
+  port: 8080                  # used in Service
+  nodePort: 30080             # used in NodePort Service
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://ekt-ecard-v1-ekt-ecard-ecard-app-postgres.default.svc.cluster.local:5432/ecard
+    SPRING_DATASOURCE_USERNAME: ecard
+    SPRING_DATASOURCE_PASSWORD: ecard@123
+    SPRING_DATA_REDIS_HOST: ekt-ecard-v1-ekt-ecard-ecard-app-redis.default.svc.cluster.local
+    NEO4J_SERVICE_URL: http://ekt-ecard-v1-ekt-ecard-ecard-neo4j-service.default.svc.cluster.local:8081
+    CHAT_SERVICE_URL: http://ekt-ecard-v1-ekt-ecard-ecard-chat-service.default.svc.cluster.local:8082
+
+ecardAppPostgres:
+  replicaCount: 1
+  image: postgis/postgis:15-3.5-alpine
+  port: 5432
+  storage: 100Mi
+  env:
+    POSTGRES_DB: ecard
+    POSTGRES_USER: ecard
+    POSTGRES_PASSWORD: ecard@123
+
+ecardAppRedis:
+  replicaCount: 1
+  image: redis:7.2.4-alpine
+  port: 6379
+  storage: 100Mi
+
+ecardChatService:
+  replicaCount: 1
+  image: vasudkr081/chat-service
+  port: 8082
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://ekt-ecard-v1-ekt-ecard-ecard-chat-postgres.default.svc.cluster.local:5433/ecard
+    SPRING_DATASOURCE_USERNAME: ecard
+    SPRING_DATASOURCE_PASSWORD: ecard@123
+
+    SPRING_DATA_REDIS_HOST: ekt-ecard-v1-ekt-ecard-ecard-app-redis.default.svc.cluster.local
+    SPRING_DATA_REDIS_PORT: "6379"
+    SPRING_PROFILES_ACTIVE: debug
+
+    ROCKET_CHAT_URL: http://ekt-ecard-v1-ekt-ecard-ecard-rocketchat.default.svc.cluster.local:3000
+    ROCKET_ADMIN_USER: admin
+    ROCKET_ADMIN_PASSWORD: root
+
+
+ecardChatPostgres:
+  replicaCount: 1
+  image: postgis/postgis:15-3.5-alpine
+  containerPort: 5432
+  servicePort: 5433  # this is the external-facing port
+  storage: 100Mi
+  env:
+    POSTGRES_DB: ecard
+    POSTGRES_USER: ecard
+    POSTGRES_PASSWORD: ecard@123
+
+ecardChatRedis:
+  replicaCount: 1
+  image: redis:7.2.4-alpine
+  containerPort: 6379         # Inside the container
+  servicePort: 6380           # External port exposed by the Service
+  storage: 100Mi
+
+ecardRocketchat:
+  replicaCount: 1
+  image: registry.rocket.chat/rocketchat/rocket.chat:latest
+  port: 3000
+  env:
+    ADMIN_EMAIL: admin@example.com
+    ADMIN_PASS: root
+    ADMIN_USERNAME: admin
+    DEPLOY_METHOD: docker
+    MONGO_URL: mongodb://PLACEHOLDER/rocketchat?replicaSet=rs0
+    MONGO_OPLOG_URL: mongodb://PLACEHOLDER/local?replicaSet=rs0
+    OVERWRITE_SETTING_Accounts_AllowUserRegistration: "false"
+    OVERWRITE_SETTING_Accounts_RegistrationForm: Disabled
+    OVERWRITE_SETTING_Accounts_RequirePasswordConfirmation: "true"
+    OVERWRITE_SETTING_Accounts_TwoFactorAuthentication_Enabled: "true"
+    OVERWRITE_SETTING_Show_Setup_Wizard: "false"
+    PORT: "3000"
+    ROOT_URL: http://localhost:3000
+    WSCONFIG: ws://localhost:3000/websocket
+    WebSocket_Ping_Interval: "6000000"
+    WebSocket_Ping_Timeout: "12000000"
+
+
+
+ecardMongodb:
+  replicaCount: 1
+  image: bitnami/mongodb:6.0
+  containerPort: 27017
+  port: 27017
+  storage: 100Mi
+  env:
+    MONGODB_REPLICA_SET_MODE: primary
+    MONGODB_REPLICA_SET_NAME: rs0
+    MONGODB_PORT_NUMBER: "27017"
+    MONGODB_INITIAL_PRIMARY_HOST: ecard-mongodb
+    MONGODB_INITIAL_PRIMARY_PORT_NUMBER: "27017"
+    MONGODB_ADVERTISED_HOSTNAME: ecard-mongodb
+    MONGODB_ENABLE_JOURNAL: "true"
+    ALLOW_EMPTY_PASSWORD: "yes"
+
+ecardNeo4jService:
+  replicaCount: 1
+  image: vasudkr081/neo4j-service
+  port: 8081
+  env:
+    SPRING_NEO4J_URI: bolt://ecard-neo4j:7687
+    SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+    SPRING_NEO4J_AUTHENTICATION_PASSWORD: ecard@123
+
+ecardNeo4j:
+  replicaCount: 1
+  image: neo4j:5.26.1
+  ports:
+    - 7474
+    - 7687
+  storage: 250Mi
+  env:
+    NEO4J_AUTH: neo4j/ecard@123
+
+grafana:
+  name: ecard-grafana
+  replicaCount: 1
+  image:
+    repository: grafana/grafana
+    tag: 9.5.2
+  containerPort: 3000
+  hostPort: 3030
+  servicePort: 3030
+
+
+prometheus:
+  name: ecard-prometheus
+  replicaCount: 1
+  image:
+    repository: prom/prometheus
+    tag: v2.46.0
+  containerPort: 9090
+  hostPort: 9090
+  servicePort: 9090
+
+ecardTempo:
+  name: ecard-tempo
+  image:
+    repository: grafana/tempo
+    tag: "2.2.2"
+  config:
+    server:
+      http_listen_port: 3100
+    storage:
+      trace:
+        backend: local
+        path: /tmp/tempo
+
+
+ecardLogstash:
+  name: ecard-logstash
+  image:
+    repository: docker.elastic.co/logstash/logstash
+    tag: "8.16.6"
+  config:
+    logstash:
+      pipeline:
+        size: 125
+        delay: 5
+    elasticsearch:
+      hosts: ["http://localhost:9200"]
+

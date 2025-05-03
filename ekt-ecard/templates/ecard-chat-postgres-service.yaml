@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-chat-postgres
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-chat-postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: {{ .Values.ecardChatPostgres.servicePort }}
+      targetPort: {{ .Values.ecardChatPostgres.containerPort }}
+  selector:
+    app: {{ include "ekt-ecard.name" . }}-ecard-chat-postgres

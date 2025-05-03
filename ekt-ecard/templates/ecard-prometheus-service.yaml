@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.prometheus.name }}
+  labels:
+    app: {{ .Values.prometheus.name }}
+spec:
+  selector:
+    app: {{ .Values.prometheus.name }}
+  ports:
+    - name: http
+      port: {{ .Values.prometheus.servicePort }}
+      targetPort: {{ .Values.prometheus.containerPort }}

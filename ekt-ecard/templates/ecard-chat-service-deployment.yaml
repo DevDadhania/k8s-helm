@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-chat-service
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-chat-service
+spec:
+  replicas: {{ .Values.ecardChatService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-chat-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-chat-service
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      containers:
+        - name: ecard-chat-service
+          image: "{{ .Values.ecardChatService.image }}"
+          ports:
+            - containerPort: {{ .Values.ecardChatService.port }}
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "{{ .Values.ecardChatService.env.SPRING_DATASOURCE_URL }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "{{ .Values.ecardChatService.env.SPRING_DATASOURCE_USERNAME }}"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "{{ .Values.ecardChatService.env.SPRING_DATASOURCE_PASSWORD }}"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "{{ .Values.ecardChatService.env.SPRING_DATA_REDIS_HOST }}"
+            - name: ROCKET_CHAT_URL
+              value: "{{ .Values.ecardChatService.env.ROCKET_CHAT_URL }}"
+            - name: ROCKET_ADMIN_USER
+              value: "{{ .Values.ecardChatService.env.ROCKET_ADMIN_USER }}"
+            - name: ROCKET_ADMIN_PASSWORD
+              value: "{{ .Values.ecardChatService.env.ROCKET_ADMIN_PASSWORD }}"
+      restartPolicy: Always

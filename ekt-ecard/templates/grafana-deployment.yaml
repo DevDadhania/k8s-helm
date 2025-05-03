@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.grafana.name }}
+  labels:
+    app: {{ .Values.grafana.name }}
+spec:
+  replicas: {{ .Values.grafana.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.grafana.name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.grafana.name }}
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      containers:
+        - name: {{ .Values.grafana.name }}
+          image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.grafana.containerPort }}
+              hostPort: {{ .Values.grafana.hostPort }}
+              protocol: TCP
+          resources: {}
+      restartPolicy: Always

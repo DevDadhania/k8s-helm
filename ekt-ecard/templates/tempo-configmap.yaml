@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  labels:
+    app: {{ .Values.tempo.name }}
+data:
+  tempo.yaml: |
+    # Add your tempo.yaml configuration here
+    server:
+      http_listen_port: 3100
+    storage:
+      trace:
+        backend: local
+        path: /tmp/tempo
+    # Continue with the rest of the configuration...

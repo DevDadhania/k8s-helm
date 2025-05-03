@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-logstash-config
+  labels:
+    app: {{ .Release.Name }}-ecard-logstash
+data:
+  logstash.conf: |
+    # Example Logstash pipeline configuration
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["http://localhost:9200"]
+        index => "logstash-%{+YYYY.MM.dd}"
+      }
+    }
+  
+  logstash.yml: |
+    # Logstash main configuration
+    pipeline.batch.size: 125
+    pipeline.batch.delay: 5
+    path.data: /tmp/logstash

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-neo4j
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-neo4j
+spec:
+  replicas: {{ .Values.ecardNeo4j.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-neo4j
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-neo4j
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      containers:
+        - name: ecard-neo4j
+          image: "{{ .Values.ecardNeo4j.image }}"
+          env:
+            - name: NEO4J_AUTH
+              value: "{{ .Values.ecardNeo4j.env.NEO4J_AUTH }}"
+          ports:
+            {{- range .Values.ecardNeo4j.ports }}
+            - containerPort: {{ . }}
+            {{- end }}
+          volumeMounts:
+            - name: neo4j-data
+              mountPath: /data
+      volumes:
+        - name: neo4j-data
+          persistentVolumeClaim:
+            claimName: {{ include "ekt-ecard.fullname" . }}-ecard-neo4j-pvc
+      restartPolicy: Always

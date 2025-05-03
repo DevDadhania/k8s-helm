@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-neo4j-service
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-neo4j-service
+spec:
+  replicas: {{ .Values.ecardNeo4jService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-neo4j-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-neo4j-service
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      containers:
+        - name: ecard-neo4j-service
+          image: "{{ .Values.ecardNeo4jService.image }}"
+          ports:
+            - containerPort: {{ .Values.ecardNeo4jService.port }}
+          env:
+            - name: SPRING_NEO4J_URI
+              value: "{{ .Values.ecardNeo4jService.env.SPRING_NEO4J_URI }}"
+            - name: SPRING_NEO4J_AUTHENTICATION_USERNAME
+              value: "{{ .Values.ecardNeo4jService.env.SPRING_NEO4J_AUTHENTICATION_USERNAME }}"
+            - name: SPRING_NEO4J_AUTHENTICATION_PASSWORD
+              value: "{{ .Values.ecardNeo4jService.env.SPRING_NEO4J_AUTHENTICATION_PASSWORD }}"
+      restartPolicy: Always

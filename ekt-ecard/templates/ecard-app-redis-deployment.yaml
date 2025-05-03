@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-app-redis
+  labels:
+    app: {{ include "ekt-ecard.name" . }}-ecard-app-redis
+    io.kompose.service: ecard-app-redis
+spec:
+  replicas: {{ .Values.ecardAppRedis.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-app-redis
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-app-redis
+        io.kompose.network/helmcharts-ecard-network: "true"
+    spec:
+      containers:
+        - name: ecard-app-redis
+          image: "{{ .Values.ecardAppRedis.image }}"
+          args:
+            - redis-server
+            - --loglevel
+            - warning
+          ports:
+            - containerPort: {{ .Values.ecardAppRedis.port }}
+          volumeMounts:
+            - name: redis-cache
+              mountPath: /data
+      volumes:
+        - name: redis-cache
+          persistentVolumeClaim:
+            claimName: {{ include "ekt-ecard.fullname" . }}-ecard-app-redis-pvc
+      restartPolicy: Always

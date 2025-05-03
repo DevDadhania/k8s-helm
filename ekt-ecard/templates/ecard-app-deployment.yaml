@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ekt-ecard.fullname" . }}-ecard-app
+  labels:
+    app: {{ include "ekt-ecard.name" . }}
+    io.kompose.service: ecard-app
+spec:
+  replicas: {{ .Values.ecardApp.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ekt-ecard.name" . }}-ecard-app
+  template:
+    metadata:
+      labels:
+        app: {{ include "ekt-ecard.name" . }}-ecard-app
+        io.kompose.service: ecard-app
+    spec:
+      containers:
+        - name: ecard-app
+          image: "{{ .Values.ecardApp.image }}"
+          ports:
+            - containerPort: {{ .Values.ecardApp.containerPort }}
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "{{ .Values.ecardApp.env.SPRING_DATASOURCE_URL }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "{{ .Values.ecardApp.env.SPRING_DATASOURCE_USERNAME }}"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "{{ .Values.ecardApp.env.SPRING_DATASOURCE_PASSWORD }}"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "{{ .Values.ecardApp.env.SPRING_DATA_REDIS_HOST }}"
+            - name: NEO4J_SERVICE_URL
+              value: "{{ .Values.ecardApp.env.NEO4J_SERVICE_URL }}"
+            - name: CHAT_SERVICE_URL
+              value: "{{ .Values.ecardApp.env.CHAT_SERVICE_URL }}"
+      restartPolicy: Always

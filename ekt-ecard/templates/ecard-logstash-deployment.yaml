@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose-v2.yaml
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: ecard-logstash
+  name: ecard-logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: ecard-logstash
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose-v2.yaml
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/helmcharts-ecard-network: "true"
+        io.kompose.service: ecard-logstash
+    spec:
+      containers:
+        - image: docker.elastic.co/logstash/logstash:8.16.6
+          name: ecard-logstash
+          ports:
+            - containerPort: 5044
+              hostPort: 5044
+              protocol: TCP
+            - containerPort: 9600
+              hostPort: 9600
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /usr/share/logstash/pipeline/logstash.conf
+              name: ecard-logstash-claim0
+            - mountPath: /usr/share/logstash/config/logstash.yml
+              name: ecard-logstash-claim1
+      restartPolicy: Always
+      volumes:
+        - name: ecard-logstash-claim0
+          persistentVolumeClaim:
+            claimName: ecard-logstash-claim0
+        - name: ecard-logstash-claim1
+          persistentVolumeClaim:
+            claimName: ecard-logstash-claim1
+status: {}
